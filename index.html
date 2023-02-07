@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <meta content="" name="description">
+    <meta content="MXB AOO" name="author">
+    <title>AOO Tracker</title>
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <meta content="#712cf9" name="theme-color">
+    <script src="js/translator.js"></script>
+    <script src="js/en.lang.js"></script>
+    <script src="js/fr.lang.js"></script>
+    <script src="js/ja.lang.js"></script>
+    <script src="js/ko.lang.js"></script>
+    <script src="js/es.lang.js"></script>
+    <script src="js/pt.lang.js"></script>
+    <script src="js/ru.lang.js"></script>
+    <script>
+        dicts = {'en': en_dict, 'fr': fr_dict, 'ja': ja_dict, 'ko': ko_dict, 'es': es_dict, 'pt': pt_dict, 'ru': ru_dict};
+    </script>
+
+    <script src="js/aooStats.js"></script>
+
+    <!-- Custom styles for this template -->
+    <link href="custom.css" rel="stylesheet">
+    <script src="dist/plotly-2.17.1.min.js"></script>
+    <script src='dist/sql-wasm.js'></script>
+</head>
+<script>
+    function change_lang(lang){
+        const page_addr = window.location.href;
+        const path = page_addr.substring(0, page_addr.lastIndexOf('/') + 1);
+        const end = page_addr.lastIndexOf('?') === -1 ? page_addr.length : page_addr.lastIndexOf('?');
+        const page_name = page_addr.substring(page_addr.lastIndexOf('/') + 1, end);
+        const new_page_addr = path + page_name + '?lang=' + lang;
+        window.location.href = new_page_addr;
+    }
+</script>
+<body>
+
+<main style="background-color:#91afaf;min-height: 100vh;">
+    <div id="news_modal" class="modal">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 750px;">
+
+            <div id="news_body" class="modal-content">
+
+                <!--<div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>-->
+            </div>
+        </div>
+    </div>
+    <div class="divider"></div>
+    <div id="loading-message" class="px-4 py-3 mx-auto text-center main-container" style="min-height: 90vh; position: relative;">
+        <div class="spinner-border" role="status" style="position: absolute; top: 50%">
+            <span>Loading...</span>
+        </div>
+    </div>
+    <div id="main_content" style="display: none">
+        <div class="px-4 py-3 mx-auto text-center main-container" style="background-color: #203a3a;position: relative">
+            <h1 id="main_title" class="display-5 fw-bold" style="margin-bottom: 0px;color: #ffffff;">AOO 385</h1>
+            <span style="position: absolute;top: 0px;right: 0px;margin-right: 20px">
+            <img src="figs/gb.svg" alt="English" style="width: 20px; height: 20px; cursor: pointer;"
+                 onclick="change_lang('en')">
+            <img src="figs/fr.svg" alt="Français" style="width: 20px; height: 20px; cursor: pointer;"
+                 onclick="change_lang('fr')">
+            <img src="figs/jp.svg" alt="日本語" style="width: 20px; height: 20px; cursor: pointer;"
+                 onclick="change_lang('ja')">
+            <img src="figs/kr.svg" alt="한국어" style="width: 20px; height: 20px; cursor: pointer;"
+                 onclick="change_lang('ko')">
+            <img src="figs/es.svg" alt="Español" style="width: 20px; height: 20px; cursor: pointer;"
+                 onclick="change_lang('es')">
+            <img src="figs/pt.svg" alt="Português" style="width: 20px; height: 20px; cursor: pointer;"
+                 onclick="change_lang('pt')">
+            <img src="figs/ru.svg" alt="Русский" style="width: 20px; height: 20px; cursor: pointer;"
+                 onclick="change_lang('ru')">
+        </span>
+            <span id="news_button" style="position: absolute;top: 2px;left: 10px;cursor: pointer;">📰</span>
+        </div>
+        <div class="divider"></div>
+        <div class="py-2 mx-auto text-center main-container">
+            <!--<h2 class="display-8 fw-bold" style="margin-bottom: 20px;margin-top: 20px;">Commander ranking</h2>-->
+            <div id="title_commander_box" class="box_vertical_title">Commander Ranking</div>
+            <div id="commander_graph_holder" style=""></div>
+        </div>
+        <div class="divider"></div>
+        <div class="py-2 mx-auto text-center main-container">
+            <div id="title_alliance_box" class="box_vertical_title">Alliance Ranking</div>
+            <div id="alliance_graph_holder"></div>
+        </div>
+        <div class="divider"></div>
+        <div class="py-2 mx-auto text-center main-container" style="max-width: 840px;background-color:white;">
+            <div id="title_strongestcommander_box" class="box_vertical_title">Strongest Commander</div>
+            <div id="strongest_commander_list" style="min-height: 400px"></div>
+        </div>
+    </div>
+    <div class="divider"></div>
+    <div class="py-2 mx-auto text-center" style="max-width: 840px;">
+    MaxBlunt (#385)
+    </div>
+</main>
+
+
+<script src="bootstrap/js/bootstrap.bundle.min.js"></script>
+<script>
+
+
+    function storageAvailable(type) {
+        try {
+            var storage = window[type],
+                x = '__storage_test__';
+            storage.setItem(x, x);
+            storage.removeItem(x);
+            return true;
+        } catch (e) {
+            return e instanceof DOMException && (
+                    // everything except Firefox
+                    e.code === 22 ||
+                    // Firefox
+                    e.code === 1014 ||
+                    // test name field too, because code might not be present
+                    // everything except Firefox
+                    e.name === 'QuotaExceededError' ||
+                    // Firefox
+                    e.name === 'NS_ERROR_DOM_QUOTA_REACHED') &&
+                // acknowledge QuotaExceededError only if there's something already stored
+                storage.length !== 0;
+        }
+    }
+    world = 385;
+    // get navigator language
+    if (navigator.languages != undefined) {
+        lang = navigator.languages[0];
+    } else {
+        lang = navigator.language;
+    }
+    lang = lang || 'en';
+    lang = lang.substring(0, 2);
+    const localStorageAvailable = storageAvailable('localStorage');
+    if (localStorageAvailable) {
+        if(localStorage.getItem('world') != null){
+            world = localStorage.getItem('world');
+        }
+        if(localStorage.getItem('lang') != null){
+            lang = localStorage.getItem('lang');
+        }
+    }
+    // test if lang parameter is set
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    if (urlParams.has('lang')) {
+        lang = urlParams.get('lang');
+        if(localStorageAvailable){
+            localStorage.setItem('lang', lang);
+        }
+    }
+    if (urlParams.has('world')) {
+        world = urlParams.get('world');
+        if(localStorageAvailable){
+            localStorage.setItem('world', world);
+        }
+    }
+
+
+
+    document.getElementById("main_title").innerHTML = "AOO " + world;
+    translator = new Translator(dicts, lang);
+
+
+
+    aooStats_init().then(function (aooStats) {
+
+        document.getElementById("title_commander_box").innerHTML = translator.translate("Commander Ranking");
+        document.getElementById("title_alliance_box").innerHTML = translator.translate("Alliance Ranking");
+        document.getElementById("title_strongestcommander_box").innerHTML = translator.translate("Strongest Commander");
+        let ranking = "commander_officer";
+
+        let commanderRankingWidget = new aooStats.rankingWidget("commander_graph_holder", "commander_officer", aooStats, aooStats["commanders"], mode = "commander");
+        let allianceRankingWidget = new aooStats.rankingWidget("alliance_graph_holder", "alliance_power", aooStats, aooStats["alliances"], mode = "alliance");
+
+
+        let strongestCommanderDiv = document.getElementById("strongest_commander_list");
+        strongestCommanderDiv.style.paddingLeft = "20px";
+        strongestCommanderDiv.style.paddingRight = "20px";
+
+
+        strongestCommanderDiv.innerHTML =
+            '<span style="font-size: 150%;font-weight: bold;margin-right: 20px;vertical-align: middle">' + translator.translate("Strongest Commander Events") + ' </span>'
+
+
+        let strongestCommanderWidget = new aooStats.strongestCommanderEventWidget(strongestCommanderDiv);
+
+
+        let news_modal = new bootstrap.Modal(document.getElementById('news_modal'));
+        document.getElementById("news_button").addEventListener('click', function () {
+            news_modal.show();
+        });
+        let newsWidget = new aooStats.newsWidget(document.getElementById("news_body"));
+
+        document.getElementById("loading-message").style.display = "none";
+        document.getElementById("main_content").style.display = "block";
+
+        news_modal.show();
+    });
+
+</script>
+
+</body>
+</html>

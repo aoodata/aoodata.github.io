@@ -1,0 +1,156 @@
+@media (min-width: 992px) {
+    .rounded-lg-3 {
+        border-radius: .3rem;
+    }
+}
+
+
+/*the container must be positioned relative:*/
+.autocomplete_container {
+    position: relative;
+    display: inline-block;
+    text-align: left;
+}
+
+input {
+    /*border: 2px solid transparent;
+    background-color: #f1f1f1;
+    padding: 10px;
+    font-size: 16px;*/
+}
+
+input[type=text] {
+    /*background-color: #f1f1f1;*/
+    width: 170px;
+    color: black;
+    background-color: #f1fff8;
+    padding: 6px 12px;
+    border: 1px solid #1f3030;
+    border-radius: 6px;
+}
+
+input::placeholder {
+    /*font-weight: bold;*/
+    opacity: 1;
+    color: #8d8d8d;
+}
+
+.btn {
+    color: black;
+    background-color: #f1fff8;
+    border: 1px solid #1f3030;
+}
+
+.btn:hover {
+    color: black;
+    background-color: #c3efdc;
+    border: 1px solid #1f3030;
+}
+
+.btn.show {
+    color: black;
+    background-color: #c3efdc;
+    border: 1px solid #1f3030;
+}
+
+input[type=text]:focus {
+    /*background-color: #fff;*/
+    outline: none;
+    color: black;
+    background-color: #c3efdc;
+    border: 1px solid #1f3030;
+}
+
+input[type=text]:hover {
+    /*background-color: #fff;*/
+    outline: none;
+    color: black;
+    background-color: #c3efdc;
+    border: 1px solid #1f3030;
+}
+
+input[type=submit] {
+    background-color: DodgerBlue;
+    color: black;
+    cursor: pointer;
+}
+
+.autocomplete-items {
+    position: absolute;
+    width: 100%;
+    margin-top: 2px;
+    margin-left: 0px;
+    border-radius: 0.375em;
+    border: 1px solid #d4d4d4;
+    z-index: 99;
+    /*position the autocomplete items to be the same width as the container:*/
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+.dropdown-item.active, .dropdown-item:active {
+    background-color: #0dab5f;
+}
+
+.autocomplete-items div {
+    padding: 2px;
+    border-bottom: 1px solid #d4d4d4;
+}
+
+/*when hovering an item:*/
+.autocomplete-items div:hover {
+    background-color: #0dab5f;
+    color: white;
+}
+
+/*when navigating through the items using the arrow keys:*/
+.autocomplete-active {
+    background-color: #0dab5f !important;
+    color: #ffffff;
+}
+
+.button {
+    cursor: pointer;
+
+}
+
+.modal-header {
+    background-color: #609f69;
+    color: white;
+    font-weight: bold;
+    font-size: 150%;
+    text-align: center;
+}
+
+.divider {
+    height: 20px;
+}
+
+.main-container {
+    border-radius: 6px;
+    box-shadow: rgb(0 0 0 / 24%) 0px 3px 8px;
+    max-width: 840px;
+    background-color: white;
+    text-align: left;
+    position: relative;
+    padding-left: 45px;
+}
+
+.box_vertical_title {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg) scale(1.001);
+    display: inline-block;
+    background-color: #203a3a;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    height: 100%;
+    border-radius: 6px;
+    font-size: 160%;
+    color: #ffffff;
+    font-weight: bold;
+    padding-left: 5px;
+}
