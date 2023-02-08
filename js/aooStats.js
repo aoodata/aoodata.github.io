@@ -1015,7 +1015,9 @@ async function aooStats_init() {
                     }
 
                     inp.addEventListener("keydown", function (e) {
-                        if (e.keyCode == 13) {
+                        const key = e.code || e.keyCode;
+                        if (key === 'Enter' || key === 13) {
+                            inp.blur();
                             /*If the ENTER key is pressed, prevent the form from being submitted,*/
                             e.preventDefault();
                             return false;
@@ -1023,7 +1025,9 @@ async function aooStats_init() {
                     });
 
                     inp.addEventListener("keyup", function (e) {
-                        if (e.keyCode == 13) {
+                        const key = e.code || e.keyCode;
+                        if (key === 'Enter' || key === 13) {
+                            inp.blur();
                             /*If the ENTER key is pressed, prevent the form from being submitted,*/
                             e.preventDefault();
                             return false;
@@ -1031,7 +1035,9 @@ async function aooStats_init() {
                     });
 
                     inp.addEventListener("keypress", function (e) {
-                        if (e.keyCode == 13) {
+                        const key = e.code || e.keyCode;
+                        if (key === 'Enter' || key === 13) {
+                            inp.blur();
                             /*If the ENTER key is pressed, prevent the form from being submitted,*/
                             e.preventDefault();
                             return false;
