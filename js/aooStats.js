@@ -1020,7 +1020,6 @@ async function aooStats_init() {
                             inp.blur();
                             /*If the ENTER key is pressed, prevent the form from being submitted,*/
                             e.preventDefault();
-                            return false;
                         }
                     });
 
@@ -1030,7 +1029,6 @@ async function aooStats_init() {
                             inp.blur();
                             /*If the ENTER key is pressed, prevent the form from being submitted,*/
                             e.preventDefault();
-                            return false;
                         }
                     });
 
@@ -1040,8 +1038,14 @@ async function aooStats_init() {
                             inp.blur();
                             /*If the ENTER key is pressed, prevent the form from being submitted,*/
                             e.preventDefault();
-                            return false;
                         }
+                    });
+
+                    inp.addEventListener("change", function (e) {
+                        inp.focus();
+                        inp.blur();
+                        e.preventDefault();
+                        return false;
                     });
 
                     /*execute a function when someone clicks in the document:*/
