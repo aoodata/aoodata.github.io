@@ -899,7 +899,7 @@ async function aooStats_init() {
             let clearButtonName = divId + "_clearButton";
             autocompleteDIV.innerHTML = '' +
                 '<div class="autocomplete_container" >' +
-                '<input id="' + inputName + '" type="text" name="commander_name" placeholder="' + autocompletePlaceHolder + '">' +
+                '<input id="' + inputName + '" type="text" tabindex="-1" name="commander_name" placeholder="' + autocompletePlaceHolder + '">' +
                 '<span title="' + translator.translate("Clear name") + '" class="button" id="' + clearButtonName + '" style="display: none;cursor: pointer;">⌫</span>' +
                 '</div>';
 
