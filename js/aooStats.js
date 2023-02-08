@@ -1022,6 +1022,22 @@ async function aooStats_init() {
                         }
                     });
 
+                    inp.addEventListener("keyup", function (e) {
+                        if (e.keyCode == 13) {
+                            /*If the ENTER key is pressed, prevent the form from being submitted,*/
+                            e.preventDefault();
+                            return false;
+                        }
+                    });
+
+                    inp.addEventListener("keypress", function (e) {
+                        if (e.keyCode == 13) {
+                            /*If the ENTER key is pressed, prevent the form from being submitted,*/
+                            e.preventDefault();
+                            return false;
+                        }
+                    });
+
                     /*execute a function when someone clicks in the document:*/
                     document.addEventListener("click", function (e) {
                         closeAllLists(e.target);
