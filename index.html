@@ -45,7 +45,7 @@
 <body>
 
 <main style="background-color:#91afaf;min-height: 100vh;">
-    <div id="news_modal" class="modal">
+    <div id="news_modal" class="modal" style="max-height: 99vh;">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 750px;">
 
             <div id="news_body" class="modal-content">
@@ -58,8 +58,14 @@
     </div>
     <div class="divider"></div>
     <div id="loading-message" class="px-4 py-3 mx-auto text-center main-container" style="min-height: 90vh; position: relative;">
-        <div class="spinner-border" role="status" style="position: absolute; top: 50%">
+        <!--<div class="spinner-border" role="status" style="position: absolute; top: 50%">
             <span>Loading...</span>
+
+        </div>-->
+        <div  role="status" style="position: absolute; top: 50%; left: 50%; transform: translateY(-50%) translateX(-50%);">
+            <div class = "rotate"><img src="android-chrome-192x192.png" alt="Loading..." style="width: 100px; height: 100px;"></div>
+
+
         </div>
     </div>
     <div id="main_content" style="display: none">
@@ -176,6 +182,7 @@
 
     aooStats_init().then(function (aooStats) {
 
+        document.getElementById("main_content").style.display = "block";
         document.getElementById("title_commander_box").innerHTML = translator.translate("Commander Ranking");
         document.getElementById("title_alliance_box").innerHTML = translator.translate("Alliance Ranking");
         document.getElementById("title_strongestcommander_box").innerHTML = translator.translate("Strongest Commander");
@@ -203,10 +210,11 @@
         });
         let newsWidget = new aooStats.newsWidget(document.getElementById("news_body"));
 
+
         document.getElementById("loading-message").style.display = "none";
-        document.getElementById("main_content").style.display = "block";
 
         news_modal.show();
+        window.dispatchEvent(new Event('resize'));
     });
 
 </script>

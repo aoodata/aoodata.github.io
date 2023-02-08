@@ -831,6 +831,7 @@ async function aooStats_init() {
             graphCommandsRow.style.textAlign = "left";
             graphCommandsRow.style.paddingLeft = "20px";
             graphCommandsRow.style.paddingRight = "20px";
+            graphCommandsRow.style.position = "relative";
             this.rootDomElement.appendChild(graphCommandsRow)
 
             // ------------------ Ranking selection ------------------
@@ -1013,6 +1014,14 @@ async function aooStats_init() {
                         }
                     }
 
+                    inp.addEventListener("keydown", function (e) {
+                        if (e.keyCode == 13) {
+                            /*If the ENTER key is pressed, prevent the form from being submitted,*/
+                            e.preventDefault();
+                            return false;
+                        }
+                    });
+
                     /*execute a function when someone clicks in the document:*/
                     document.addEventListener("click", function (e) {
                         closeAllLists(e.target);
@@ -1025,9 +1034,13 @@ async function aooStats_init() {
             initAutoComplete(this);
 
             // ------------------ Graph control buttons ------------------
-            let controlButtons = document.createElement("span");
+            let controlButtons = document.createElement("div");
             controlButtons.style.verticalAlign = "middle";
-            controlButtons.style.float = "right";
+            //controlButtons.style.float = "right";
+            controlButtons.style.position = "absolute";
+            controlButtons.style.right = "0px";
+            controlButtons.style.bottom = "0px";
+            controlButtons.style.zIndex = "1";
             controlButtons.style.fontSize = "150%";
             graphCommandsRow.appendChild(controlButtons);
 
@@ -1191,8 +1204,13 @@ async function aooStats_init() {
                     t: 50,
                     pad: 4
                 },
+
             };
-            var config = {responsive: true}
+            var config = {
+                responsive: true,
+                modeBarButtonsToRemove: ['select2d', 'lasso2d', 'hoverClosestCartesian', 'hoverCompareCartesian'],
+                displaylogo: false,
+            }
             Plotly.newPlot(this.chartDIV, [], layout, config);
 
 
