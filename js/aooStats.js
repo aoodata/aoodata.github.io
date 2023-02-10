@@ -126,16 +126,21 @@ async function aooStats_init() {
      */
     function processAllianceCommanderScores(req) {
         if (req.length === 0) {
-            return {"scores": [], "dates": []};
+            return {"scores": [], "dates": [], "ranks": []};
         }
         req = req[0]["values"];
         let scores = [];
         let dates = [];
+        let ranks = [];
         for (let i = 0; i < req.length; i++) {
             scores.push(req[i][0]);
-            dates.push(new Date(req[i][1] * 1000));
+            // convert the date from unix timestamp to Date object, keep only the day, month and year (not the time) and add it to the dates array
+            let date = new Date(req[i][1] * 1000);
+            date.setHours(0, 0, 0, 0);
+            dates.push(date);
+            ranks.push(req[i][2]);
         }
-        return {"scores": scores, "dates": dates};
+        return {"scores": scores, "dates": dates, "ranks": ranks};
     }
 
     /**
@@ -146,7 +151,7 @@ async function aooStats_init() {
      */
     dbData.getCommanderScores = function (commanderId, dataCollectionType) {
         let dataCollectionTypeId = dbData["dataCollectionTypes"][dataCollectionType];
-        let req = db.exec("SELECT value, date FROM commander_ranking_data, data_collections WHERE data_collections.id = commander_ranking_data.data_collection_id AND commander_ranking_data.commander_id = " + commanderId + " AND type_id = " + dataCollectionTypeId + " ORDER BY date ASC");
+        let req = db.exec("SELECT value, date, rank FROM commander_ranking_data, data_collections WHERE data_collections.id = commander_ranking_data.data_collection_id AND commander_ranking_data.commander_id = " + commanderId + " AND type_id = " + dataCollectionTypeId + " ORDER BY date ASC");
         return processAllianceCommanderScores(req)
     }
 
@@ -177,7 +182,7 @@ async function aooStats_init() {
      */
     dbData.getAllianceScores = function (allianceId, dataCollectionType) {
         let dataCollectionTypeId = dbData["dataCollectionTypes"][dataCollectionType];
-        let req = db.exec("SELECT value, date FROM alliance_ranking_data, data_collections WHERE data_collections.id = alliance_ranking_data.data_collection_id AND alliance_ranking_data.alliance_id = " + allianceId + " AND type_id = " + dataCollectionTypeId + " ORDER BY date ASC");
+        let req = db.exec("SELECT value, date, rank FROM alliance_ranking_data, data_collections WHERE data_collections.id = alliance_ranking_data.data_collection_id AND alliance_ranking_data.alliance_id = " + allianceId + " AND type_id = " + dataCollectionTypeId + " ORDER BY date ASC");
         return processAllianceCommanderScores(req)
     }
 
@@ -1166,6 +1171,7 @@ async function aooStats_init() {
                     line: {color: this.focusedEntries[entryId]}, //colorsArray[i % colorsArray.length]
                     opacity: 1,
                     entry_id: entryId,
+                    legendrank: (entryScore["ranks"].length > 0)? entryScore["ranks"][entryScore["ranks"].length - 1]:1000,
                     showlegend: true
                 }
                 return trace;
