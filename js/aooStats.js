@@ -1161,8 +1161,8 @@ async function aooStats_init() {
                     type: "scatter",
                     //mode: "lines",
                     name: entry["name"],
-                    x: entryScore["dates"],
-                    y: entryScore["scores"],
+                    x: (entryScore["dates"].length > 0)? entryScore["dates"] : [null],
+                    y: (entryScore["scores"].length > 0)? entryScore["scores"] : [null],
                     line: {color: this.focusedEntries[entryId]}, //colorsArray[i % colorsArray.length]
                     opacity: 1,
                     entry_id: entryId,
