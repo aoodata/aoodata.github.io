@@ -414,7 +414,9 @@ async function aooStats_init() {
      * @returns {{commander: commander_entry, old_score: number, new_score:number}[]}
      */
     dbData.getCommanderRankingEvolutionDuringCycle = function(rankingName, cycleNumber, takeMaxRanking=false, filterUnchanged=true){
-        cycleNumber = cycleNumber || dbData.getDateOfFirstStrongestCommanderEventBefore(new Date()).cycle_number;
+        if (cycleNumber === undefined) {
+            cycleNumber = dbData.getDateOfFirstStrongestCommanderEventBefore(new Date()).cycle_number;
+        }
         let firstDate = dbData.getStrongestCommanderEventFromCycleNumber(cycleNumber - 1).date;
         let secondDate = dbData.getStrongestCommanderEventFromCycleNumber(cycleNumber).date;
         let firstRanking;
