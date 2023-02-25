@@ -97,6 +97,11 @@
         </div>
         <div class="divider"></div>
         <div class="py-2 mx-auto text-center main-container">
+            <div id="title_commader_profile_box" class="box_vertical_title">Commander Strength</div>
+            <div id="commander_profile_graph_holder"></div>
+        </div>
+        <div class="divider"></div>
+        <div class="py-2 mx-auto text-center main-container">
             <div id="title_alliance_box" class="box_vertical_title">Alliance Ranking</div>
             <div id="alliance_graph_holder"></div>
         </div>
@@ -191,10 +196,12 @@
         document.getElementById("main_content").style.display = "block";
         document.getElementById("title_commander_box").innerHTML = translator.translate("Commander Ranking");
         document.getElementById("title_alliance_box").innerHTML = translator.translate("Alliance Ranking");
+        document.getElementById("title_commader_profile_box").innerHTML = translator.translate("Commander Strength");
         document.getElementById("title_strongestcommander_box").innerHTML = translator.translate("Strongest Commander");
         let ranking = "commander_officer";
 
         let commanderRankingWidget = new aooStats.rankingWidget("commander_graph_holder", "commander_officer", aooStats, aooStats["commanders"], mode = "commander");
+        let commanderProfileWidget = new aooStats.rankingWidget("commander_profile_graph_holder", "", aooStats, aooStats["commanders"], mode = "commanderProfile");
         let allianceRankingWidget = new aooStats.rankingWidget("alliance_graph_holder", "alliance_power", aooStats, aooStats["alliances"], mode = "alliance");
 
 

@@ -122,7 +122,7 @@ async function aooStats_init() {
      * Process the data returned by the SQL query for alliance or commander scores
      *
      * @param req the SQL query result with values and dates
-     * @returns {{scores: number[], dates: Date[]}} data to be used in the chart
+     * @returns {{scores: number[], dates: Date[], ranks: number[]}} data to be used in the chart
      */
     function processAllianceCommanderScores(req) {
         if (req.length === 0) {
@@ -147,11 +147,12 @@ async function aooStats_init() {
      * Get the scores of a commander for a given data collection type
      * @param commanderId the commander id
      * @param dataCollectionType the data collection type
+     * @param limit the number of scores to return
      * @returns {{scores: number[], dates: Date[]}} data to be used in the chart
      */
-    dbData.getCommanderScores = function (commanderId, dataCollectionType) {
+    dbData.getCommanderScores = function (commanderId, dataCollectionType, limit=1000) {
         let dataCollectionTypeId = dbData["dataCollectionTypes"][dataCollectionType];
-        let req = db.exec("SELECT value, date, rank FROM commander_ranking_data, data_collections WHERE data_collections.id = commander_ranking_data.data_collection_id AND commander_ranking_data.commander_id = " + commanderId + " AND type_id = " + dataCollectionTypeId + " ORDER BY date ASC");
+        let req = db.exec("SELECT value, date, rank FROM commander_ranking_data, data_collections WHERE data_collections.id = commander_ranking_data.data_collection_id AND commander_ranking_data.commander_id = " + commanderId + " AND type_id = " + dataCollectionTypeId + " ORDER BY date ASC LIMIT " + limit);
         return processAllianceCommanderScores(req)
     }
 
@@ -178,11 +179,12 @@ async function aooStats_init() {
      * Get the scores of an alliance for a given data collection type
      * @param allianceId the alliance id
      * @param dataCollectionType the data collection type
+     * @param limit the number of scores to return
      * @returns {{scores: number[], dates: Date[]}} data to be used in the chart
      */
-    dbData.getAllianceScores = function (allianceId, dataCollectionType) {
+    dbData.getAllianceScores = function (allianceId, dataCollectionType, limit=1000) {
         let dataCollectionTypeId = dbData["dataCollectionTypes"][dataCollectionType];
-        let req = db.exec("SELECT value, date, rank FROM alliance_ranking_data, data_collections WHERE data_collections.id = alliance_ranking_data.data_collection_id AND alliance_ranking_data.alliance_id = " + allianceId + " AND type_id = " + dataCollectionTypeId + " ORDER BY date ASC");
+        let req = db.exec("SELECT value, date, rank FROM alliance_ranking_data, data_collections WHERE data_collections.id = alliance_ranking_data.data_collection_id AND alliance_ranking_data.alliance_id = " + allianceId + " AND type_id = " + dataCollectionTypeId + " ORDER BY date ASC LIMIT " + limit);
         return processAllianceCommanderScores(req)
     }
 
@@ -380,6 +382,41 @@ async function aooStats_init() {
         }
         return ranking;
     }
+
+    /**
+     * Get the maximum ranking score
+     * @param rankingName the name of the ranking
+     * @returns {number} the maximum score
+     */
+    dbData.getMaxRankingScore = function(rankingName){
+        let req;
+        if (rankingName.startsWith("commander_")) {
+            req = db.exec("SELECT max(value) FROM commander_ranking_data, data_collections WHERE commander_ranking_data.data_collection_id = data_collections.id and type_id = " + dbData.dataCollectionTypes[rankingName])[0]["values"];
+        } else if (rankingName.startsWith("alliance_")) {
+            req = db.exec("SELECT max(value) FROM alliance_ranking_data, data_collections WHERE alliance_ranking_data.data_collection_id = data_collections.id and type_id = " + dbData.dataCollectionTypes[rankingName])[0]["values"];
+        } else {
+            throw "Invalid ranking name";
+        }
+
+        if(req.length === 0){
+            return 0;
+        }
+        return req[0][0];
+    }
+
+    /**
+     * Get the maximum ranking score for all rankings
+     * @returns {{rankingName: number}} ranking name -> maximum score
+     */
+    function getMaxRankingScores(){
+        let scores = {};
+        for(let rankingName in dbData.dataCollectionTypes){
+            scores[rankingName] = dbData.getMaxRankingScore(rankingName);
+        }
+        return scores;
+    }
+
+    dbData.maxRankingScores = getMaxRankingScores();
 
     /**
      * Get the maximum commander ranking before the first collection after the given date
@@ -761,7 +798,7 @@ async function aooStats_init() {
     dbData.rankingWidget = (function () {
 
         function rankingWidget(divId, rankingName, aooStats, nameDict, mode) {
-            // mode can be "commander" or "alliance"
+            // mode can be "commander" or "alliance" or "commanderProfile"
             this.mode = mode || "commander";
             // provides access to the aoo stats
             this.aooStats = aooStats;
@@ -827,7 +864,9 @@ async function aooStats_init() {
 
             let ranking_lists = {
                 "commander": commander_rankings,
-                "alliance": alliance_rankings
+                "alliance": alliance_rankings,
+                "commanderProfile": commander_rankings,
+                "allianceProfile": alliance_rankings
             }
 
             /***********************************
@@ -843,44 +882,46 @@ async function aooStats_init() {
 
             // ------------------ Ranking selection ------------------
             // create dropdown menu for ranking selection
-            graphCommandsRow.innerHTML =
-                '<span style="font-size: 120%;font-weight: bold;vertical-align: middle">' + translator.translate("Ranking: ") + '</span>' +
-                '<div class="dropdown" style="display: inline-block; ">\n' +
-                '  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">\n' +
-                translator.translate(this.rankingName) +
-                '  </button>\n' +
-                '  <ul class="dropdown-menu"></ul>' +
-                '</div>'
+            if (this.mode !== "commanderProfile" && this.mode !== "allianceProfile"){
+                graphCommandsRow.innerHTML =
+                    '<span style="font-size: 120%;font-weight: bold;vertical-align: middle">' + translator.translate("Ranking: ") + '</span>' +
+                    '<div class="dropdown" style="display: inline-block; ">\n' +
+                    '  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">\n' +
+                    translator.translate(this.rankingName) +
+                    '  </button>\n' +
+                    '  <ul class="dropdown-menu"></ul>' +
+                    '</div>'
 
-            let rankingNameButton = graphCommandsRow.getElementsByClassName("btn")[0];
-            let dropdownMenu = graphCommandsRow.getElementsByClassName("dropdown-menu")[0];
-            for (let i = 0; i < ranking_lists[this.mode].length; i++) {
-                let dropdownItem = document.createElement("li");
-                dropdownItem.innerHTML = '<span class="dropdown-item" style="cursor: pointer" data-name="' + ranking_lists[this.mode][i] + '">' + translator.translate(ranking_lists[this.mode][i]) + '</span>';
-                if (ranking_lists[this.mode][i] === rankingName) {
-                    dropdownItem.children[0].classList.add("active");
-                }
-                dropdownMenu.appendChild(dropdownItem);
-            }
-
-            let dropdownItems = graphCommandsRow.getElementsByClassName("dropdown-item");
-            for (let i = 0; i < dropdownItems.length; i++) {
-                dropdownItems[i].addEventListener("click", function () {
-                    this.setRankingName(dropdownItems[i].dataset.name);
-                    // change active class
-                    for (let j = 0; j < dropdownItems.length; j++) {
-                        dropdownItems[j].classList.remove("active");
+                let rankingNameButton = graphCommandsRow.getElementsByClassName("btn")[0];
+                let dropdownMenu = graphCommandsRow.getElementsByClassName("dropdown-menu")[0];
+                for (let i = 0; i < ranking_lists[this.mode].length; i++) {
+                    let dropdownItem = document.createElement("li");
+                    dropdownItem.innerHTML = '<span class="dropdown-item" style="cursor: pointer" data-name="' + ranking_lists[this.mode][i] + '">' + translator.translate(ranking_lists[this.mode][i]) + '</span>';
+                    if (ranking_lists[this.mode][i] === rankingName) {
+                        dropdownItem.children[0].classList.add("active");
                     }
-                    dropdownItems[i].classList.add("active");
-                    rankingNameButton.innerHTML = dropdownItems[i].innerHTML;
-                }.bind(this));
+                    dropdownMenu.appendChild(dropdownItem);
+                }
+
+                let dropdownItems = graphCommandsRow.getElementsByClassName("dropdown-item");
+                for (let i = 0; i < dropdownItems.length; i++) {
+                    dropdownItems[i].addEventListener("click", function () {
+                        this.setRankingName(dropdownItems[i].dataset.name);
+                        // change active class
+                        for (let j = 0; j < dropdownItems.length; j++) {
+                            dropdownItems[j].classList.remove("active");
+                        }
+                        dropdownItems[i].classList.add("active");
+                        rankingNameButton.innerHTML = dropdownItems[i].innerHTML;
+                    }.bind(this));
+                }
             }
 
 
             // ------------------ Search bar ------------------
             // create search bar for alliance/commander name
             let autocompletePlaceHolder;
-            if (this.mode === "commander") {
+            if (this.mode === "commander" || this.mode === "commanderProfile") {
                 autocompletePlaceHolder = translator.translate("Commander Name");
             } else {
                 autocompletePlaceHolder = translator.translate("Alliance Name");
@@ -1131,7 +1172,7 @@ async function aooStats_init() {
             this.clearGraph = function () {
                 this.focusedEntries = {};
                 this.usedColors = new Set();
-                this.setRankingName(this.rankingName, false);
+                this.updateGraph(false);
             }
 
             /**
@@ -1140,7 +1181,85 @@ async function aooStats_init() {
             this.resetGraph = function () {
                 this.focusedEntries = {};
                 this.usedColors = new Set();
-                this.setRankingName(this.rankingName);
+                this.updateGraph();
+            }
+
+            let scaler = function(x, rankingname){
+                return Math.pow(x/dbData["maxRankingScores"][rankingname], 0.5)
+            }
+
+            let rankingScaling = {
+                "commander_power": scaler,
+                "commander_kill": scaler,
+                "commander_city": function(x, _){ return (x-30)/8;},
+                "commander_officer": scaler,
+                "commander_titan": scaler,
+                "commander_island": scaler,
+                "commander_merit": scaler,
+                "commander_level": function(x, _){ return (x-50)/20;},
+                "commander_ke_frenzy": scaler,
+                "commander_sc_frenzy": scaler,
+                "commander_ke_void": scaler,
+                "commander_sc_void": scaler,
+            }
+
+            this._createSingleTraceSpiderPlot = function (entryId, color) {
+                let getScore = undefined;
+                if(this.mode === "commanderProfile") {
+                    getScore = dbData.getCommanderScores;
+                    entry = dbData["commanders"][entryId];
+                } else {
+                    getScore = dbData.getAllianceScores;
+                    entry = dbData["alliances"][entryId];
+                }
+
+                let scores = [];
+                let scoresNormalized = [];
+                let ranks = [];
+
+                for (let i = 0; i < this._rankingNames.length; i++) {
+                    let d = getScore(entryId, this._rankingNames[i], 1);
+                    if(d.scores.length === 0) {
+                        scores.push(0);
+                        scoresNormalized.push(0);
+                        ranks.push(101);
+                    } else {
+                        scores.push(d.scores[0]);
+                        scoresNormalized.push(rankingScaling[this._rankingNames[i]](d.scores[0], this._rankingNames[i]));
+                        ranks.push(d.ranks[0]);
+                    }
+                }
+
+                scores.push(scores[0]);
+                scoresNormalized.push(scoresNormalized[0]);
+                ranks.push(ranks[0]);
+                let hovertext = [];
+                for (let i = 0; i < this._rankingNames.length; i++) {
+                    if(ranks[i] === 101){
+                        hovertext.push(translator.translate("No data"));
+                    } else {
+                        hovertext.push(formatScore(scores[i]) + " (" + translator.translate("Rank: ") + ranks[i] + ")");
+                    }
+
+                }
+                hovertext.push(hovertext[0]);
+
+                color = color || this.getFreeColor();
+                this.usedColors.add(color);
+                this.focusedEntries[entryId] = color;
+                let trace ={
+                    type: 'scatterpolar',
+                    r: scoresNormalized,
+                    text: hovertext,
+                    hovertemplate: '%{text}',
+                    theta: this._rankingNamesTranslated,
+                    line: {color: this.focusedEntries[entryId]},
+                    //fill: 'toself',
+                    entry_id: entryId,
+                    name: entry["name"],
+                    showlegend: true
+                }
+                return trace;
             }
 
             /**
@@ -1150,7 +1269,7 @@ async function aooStats_init() {
              * @returns a plotly trace
              * @private
              */
-            this._createSingleTrace = function (entryId, color) {
+            this._createSingleTraceSingleRanking = function (entryId, color) {
                 let entry;
                 let entryScore;
                 if (this.mode === "commander") {
@@ -1164,20 +1283,24 @@ async function aooStats_init() {
                 color = color || this.getFreeColor();
                 this.usedColors.add(color);
                 this.focusedEntries[entryId] = color;
+                let rank = (entryScore["ranks"].length > 0)? entryScore["ranks"][entryScore["ranks"].length - 1]:1000;
                 let trace = {
                     type: "scatter",
                     //mode: "lines",
-                    name: entry["name"],
+                    name: entry["name"] + " (" + rank + ")",
                     x: (entryScore["dates"].length > 0)? entryScore["dates"] : [null],
                     y: (entryScore["scores"].length > 0)? entryScore["scores"] : [null],
                     line: {color: this.focusedEntries[entryId]}, //colorsArray[i % colorsArray.length]
                     opacity: 1,
                     entry_id: entryId,
-                    legendrank: (entryScore["ranks"].length > 0)? entryScore["ranks"][entryScore["ranks"].length - 1]:1000,
+                    legendrank: rank,
                     showlegend: true
                 }
                 return trace;
             }
+
+
+
 
             /**
              * Adds one or several new entries to the graph
@@ -1202,7 +1325,7 @@ async function aooStats_init() {
                 Plotly.addTraces(this.chartDIV, traces);
             }
 
-            let layout = {
+            let layoutScatter = {
                 xaxis: {
                     autorange: true,
                     //range: ['2015-02-17', '2017-02-16'],
@@ -1240,25 +1363,28 @@ async function aooStats_init() {
                 },
 
             };
-            var config = {
-                responsive: true,
-                modeBarButtonsToRemove: ['select2d', 'lasso2d', 'hoverClosestCartesian', 'hoverCompareCartesian'],
-                displaylogo: false,
+
+            let layoutSpider = {
+                polar: {
+                    radialaxis: {
+                      visible: false,
+                      range: [0, 1],
+                    },
+
+                  },
+                margin: {
+                    l: 50,
+                    r: 50,
+                    b: 50,
+                    t: 50,
+                    pad: 4
+                },
+                //dragmode: false,
+                legend :  {orientation : 'h', xanchor : "center", x : 0.5, y: -0.2}
             }
-            Plotly.newPlot(this.chartDIV, [], layout, config);
 
 
-            //plotly remove trace from legend when clicked
-            this.chartDIV.on('plotly_legendclick', function (data) {
-                let traceIndex = data.curveNumber;
-                let trace = data.data[traceIndex];
-                let commanderId = trace.entry_id;
-                this.usedColors.delete(this.focusedEntries[commanderId])
-                delete this.focusedEntries[commanderId];
 
-                Plotly.deleteTraces(this.chartDIV, traceIndex);
-                return false;
-            }.bind(this));
 
             /**
              * Clears all traces from the graph, do not reset focusedEntries
@@ -1273,18 +1399,45 @@ async function aooStats_init() {
 
             }
 
-            this.setRankingName = function (rankingName, defaultTrace = true) {
-
+            this.updateGraph = function (defaultTrace = true) {
                 this._clearTraces();
-                this.rankingName = rankingName;
+                if (this.mode === "commanderProfile" || this.mode === "AllianceProfile") {
 
-                if (Object.keys(this.focusedEntries).length == 0 && defaultTrace) {
+                    // add fake entry to avoid degenerate plot when no entries are selected
+                    let scores = [];
+                    for (let i = 0; i < this._rankingNames.length; i++) {
+                        scores.push(0);
+                    }
+
+                    scores.push(scores[0]);
+
+
+                    let trace ={
+                        type: 'scatterpolar',
+                        r: scores,
+                        hovertemplate: " ",
+                        line: {color: "rgba(0,0,0,0)"},
+                        theta: this._rankingNamesTranslated,
+                        fill: 'toself',
+                        entry_id: -1,
+                        showlegend: false,
+                        name: "",
+                    }
+
+                    Plotly.addTraces(this.chartDIV, [trace]);
+                }
+
+                 if (Object.keys(this.focusedEntries).length == 0 && defaultTrace) {
                     let top_entries;
 
                     if (this.mode == "commander") {
                         top_entries = this.aooStats.getHighestRankedCommanders(this.rankingName, 10);
-                    } else {
+                    } else if (this.mode == "alliance"){
                         top_entries = this.aooStats.getHighestRankedAlliances(this.rankingName, 5);
+                    } else if (this.mode == "commanderProfile"){
+                        top_entries = this.aooStats.getHighestRankedCommanders("commander_officer", 3);
+                    } else if (this.mode == "AllianceProfile"){
+                        top_entries = this.aooStats.getHighestRankedAlliances("alliance_power", 3);
                     }
                     /*
                     if (defaultTraceGhost) {
@@ -1336,13 +1489,68 @@ async function aooStats_init() {
                     this.addTrace(keys, colors);
                 }
 
-                Plotly.relayout(this.chartDIV, {
-                    'xaxis.autorange': true,
-                    'yaxis.autorange': true
-                });
+                if (this.mode == "commander" || this.mode == "alliance") {
+                    Plotly.relayout(this.chartDIV, {
+                        'xaxis.autorange': true,
+                        'yaxis.autorange': true
+                    });
+                } else{
+                    Plotly.relayout(this.chartDIV, {
+                        'polar.radialaxis.range': [0,1],
+                    });
+                }
             }
 
-            this.setRankingName(this.rankingName)
+            this._setRankingName = function (rankingName, defaultTrace = true) {
+                this.rankingName = rankingName;
+                this.updateGraph(defaultTrace);
+            }
+
+            let layout = undefined;
+
+            if (this.mode === "commander" || this.mode === "alliance") {
+                this._createSingleTrace = this._createSingleTraceSingleRanking;
+                this.setRankingName = this._setRankingName;
+                layout = layoutScatter;
+            } else if (this.mode === "commanderProfile" || this.mode === "allianceProfile") {
+                this._createSingleTrace = this._createSingleTraceSpiderPlot;
+                layout = layoutSpider;
+                this._rankingNamesTranslated = [];
+                this._rankingNames = ranking_lists[this.mode];
+                for (let i = 0; i < this._rankingNames.length; i++) {
+
+                    this._rankingNamesTranslated.push(translator.translate(this._rankingNames[i]));
+                }
+                this._rankingNamesTranslated.push(this._rankingNamesTranslated[0]);
+            } else {
+                throw "Unknown mode: " + this.mode;
+            }
+
+
+            var config = {
+                responsive: true,
+                modeBarButtonsToRemove: ['select2d', 'lasso2d', 'hoverClosestCartesian', 'hoverCompareCartesian'],
+                displaylogo: false,
+            }
+            Plotly.newPlot(this.chartDIV, [], layout, config);
+
+             //plotly remove trace from legend when clicked
+            this.chartDIV.on('plotly_legendclick', function (data) {
+                let traceIndex = data.curveNumber;
+                let trace = data.data[traceIndex];
+                let commanderId = trace.entry_id;
+                this.usedColors.delete(this.focusedEntries[commanderId])
+                delete this.focusedEntries[commanderId];
+
+                Plotly.deleteTraces(this.chartDIV, traceIndex);
+                return false;
+            }.bind(this));
+
+            if (this.setRankingName !== undefined) {
+                this.setRankingName(this.rankingName);
+            } else{
+                this.updateGraph();
+            }
         }
 
 
