@@ -152,7 +152,7 @@ async function aooStats_init() {
      */
     dbData.getCommanderScores = function (commanderId, dataCollectionType, limit=1000) {
         let dataCollectionTypeId = dbData["dataCollectionTypes"][dataCollectionType];
-        let req = db.exec("SELECT value, date, rank FROM commander_ranking_data, data_collections WHERE data_collections.id = commander_ranking_data.data_collection_id AND commander_ranking_data.commander_id = " + commanderId + " AND type_id = " + dataCollectionTypeId + " ORDER BY date ASC LIMIT " + limit);
+        let req = db.exec("SELECT value, date, rank FROM commander_ranking_data, data_collections WHERE data_collections.id = commander_ranking_data.data_collection_id AND commander_ranking_data.commander_id = " + commanderId + " AND type_id = " + dataCollectionTypeId + " ORDER BY date DESC LIMIT " + limit);
         return processAllianceCommanderScores(req)
     }
 
