@@ -69,4 +69,5 @@ en_dict = {
     "Commander Strength": "Commander Statistic",
     "No data": "No data",
     "Rank": "Rank",
+    "commander_warplane": "Warplane",
 }

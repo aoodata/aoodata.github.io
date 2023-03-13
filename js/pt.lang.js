@@ -68,4 +68,5 @@ pt_dict={    'commander_power': 'Poder',
     'Commander Strength': 'Estatística do comandante',
     'No data': 'Sem dados',
     'Ranking: ': 'Classificação',
+    'commander_warplane': 'Plano de guerra',
 };

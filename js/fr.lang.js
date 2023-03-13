@@ -69,4 +69,5 @@ fr_dict={
     'Commander Strength': 'Statistique du commandant',
     'No data': 'Pas de données',
     'Ranking: ': 'Rang',
+    'commander_warplane': 'Avion',
 };
