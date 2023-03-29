@@ -1285,11 +1285,11 @@ async function aooStats_init() {
                 color = color || this.getFreeColor();
                 this.usedColors.add(color);
                 this.focusedEntries[entryId] = color;
-                let rank = (entryScore["ranks"].length > 0)? entryScore["ranks"][entryScore["ranks"].length - 1]:1000;
+                let rank = (entryScore["ranks"].length > 0)? entryScore["ranks"][0]:1000;
                 let trace = {
                     type: "scatter",
                     //mode: "lines",
-                    name: entry["name"] + " (" + rank + ")",
+                    name: (rank != 1000)?(entry["name"] + " (" + rank + ")"):entry["name"],
                     x: (entryScore["dates"].length > 0)? entryScore["dates"] : [null],
                     y: (entryScore["scores"].length > 0)? entryScore["scores"] : [null],
                     line: {color: this.focusedEntries[entryId]}, //colorsArray[i % colorsArray.length]
