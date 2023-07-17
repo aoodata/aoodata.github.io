@@ -69,4 +69,7 @@ es_dict={    'commander_power': 'Fuerza',
     'No data': 'Sin datos',
     'Ranking: ': 'Rango',
     'commander_warplane': 'Avión de guerra',
+    'commander_reputation': 'Reputación',
+    'commander_loss': 'Pérdida',
+    'Top void killers': 'Asesinos vacíos superiores',
 };

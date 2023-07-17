@@ -69,4 +69,7 @@ ja_dict={    'commander_power': '力',
     'No data': 'データなし',
     'Ranking: ': 'ランク',
     'commander_warplane': 'ウォープレーン',
+    'commander_reputation': '評判',
+    'commander_loss': '損失',
+    'Top void killers': 'トップボイドキラー',
 };

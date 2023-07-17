@@ -70,4 +70,7 @@ en_dict = {
     "No data": "No data",
     "Rank": "Rank",
     "commander_warplane": "Warplane",
+    "commander_reputation": "Reputation",
+    "commander_loss": "Loss",
+    "Top void killers": "Top void killers",
 }

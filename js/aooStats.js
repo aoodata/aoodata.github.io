@@ -351,10 +351,13 @@ async function aooStats_init() {
      * Get the data collection id of the first data collection after the given date
      * @param date  the date
      * @param rankingName the name of the ranking
+     * @param after if true, get the first data collection after the given date, else get the first data collection before the given date
      * @returns {{id: number, date: Date}} the id of the data collection and the date of the data collection
      */
-    dbData.getFirstDataCollectionIdAfterDate = function(date, rankingName){
-        let req = db.exec("SELECT id, date FROM data_collections WHERE type_id = " + dbData.dataCollectionTypes[rankingName] + " AND date >= " + date / 1000 + " ORDER BY date ASC LIMIT 1");
+    dbData.getFirstDataCollectionIdNearDate = function(date, rankingName, after = true){
+        let sign = after ? ">= " : "<= ";
+        let ord = after ? "ASC" : "DESC";
+        let req = db.exec("SELECT id, date FROM data_collections WHERE type_id = " + dbData.dataCollectionTypes[rankingName] + " AND date " + sign  + date / 1000 + " ORDER BY date " + ord + " LIMIT 1");
         if(req.length === 0){
             return undefined;
         }
@@ -366,11 +369,12 @@ async function aooStats_init() {
      * Get the first commander ranking after the given date
      * @param date the date
      * @param rankingName the name of the ranking
+     * @param after if true, get the first ranking after the given date, else get the first ranking before the given date
      * @returns {{number: number}} commander id -> value
      */
-    dbData.getCommanderRankingAfterDate = function(date, rankingName){
+    dbData.getCommanderRankingNearDate = function(date, rankingName, after = true){
 
-        const dataCollectionId = dbData.getFirstDataCollectionIdAfterDate(date, rankingName);
+        const dataCollectionId = dbData.getFirstDataCollectionIdNearDate(date, rankingName, after);
         if (dataCollectionId === undefined) {
             return {};
         }
@@ -425,7 +429,7 @@ async function aooStats_init() {
      * @returns {{number: number}} commander id -> value
      */
     dbData.getMaxCommanderRankingBeforeDate = function(date, rankingName){
-        const refDataCollection = dbData.getFirstDataCollectionIdAfterDate(date, rankingName);
+        const refDataCollection = dbData.getFirstDataCollectionIdNearDate(date, rankingName);
         if (refDataCollection === undefined) {
             return {};
         }
@@ -450,20 +454,24 @@ async function aooStats_init() {
      * @param filterUnchanged if true, filter out commanders that have the same ranking in both cycles
      * @returns {{commander: commander_entry, old_score: number, new_score:number}[]}
      */
-    dbData.getCommanderRankingEvolutionDuringCycle = function(rankingName, cycleNumber, takeMaxRanking=false, filterUnchanged=true){
+    dbData.getCommanderRankingEvolutionDuringCycle = function(rankingName, cycleNumber, takeMaxRanking=false, filterUnchanged=true, short=false){
         if (cycleNumber === undefined) {
             cycleNumber = dbData.getDateOfFirstStrongestCommanderEventBefore(new Date()).cycle_number;
         }
-        let firstDate = dbData.getStrongestCommanderEventFromCycleNumber(cycleNumber - 1).date;
+
         let secondDate = dbData.getStrongestCommanderEventFromCycleNumber(cycleNumber).date;
+        let firstDate = (short)?secondDate:
+            dbData.getStrongestCommanderEventFromCycleNumber(cycleNumber - 1).date;
+
         let firstRanking;
         let secondRanking;
         if(takeMaxRanking){
             firstRanking = dbData.getMaxCommanderRankingBeforeDate(firstDate, rankingName);
             secondRanking = dbData.getMaxCommanderRankingBeforeDate(secondDate, rankingName);
         } else {
-            firstRanking = dbData.getCommanderRankingAfterDate(firstDate, rankingName);
-            secondRanking = dbData.getCommanderRankingAfterDate(secondDate, rankingName);
+            firstRanking = (short)? dbData.getCommanderRankingNearDate(firstDate, rankingName, false):
+                dbData.getCommanderRankingNearDate(firstDate, rankingName);
+            secondRanking = dbData.getCommanderRankingNearDate(secondDate, rankingName);
         }
 
         let rankingChanges = [];
@@ -569,7 +577,12 @@ async function aooStats_init() {
 
 
             function getCommandersWithHighKillNumberDiv(numberOfCommanders=10){
-                let data = dbData.getCommanderRankingEvolutionDuringCycle("commander_kill", currentCycle.cycle_number);
+                var data;
+                if (currentCycle.type === "void") {
+                    data = dbData.getCommanderRankingEvolutionDuringCycle("commander_kill", currentCycle.cycle_number, false, true,true);
+                } else{
+                    data = dbData.getCommanderRankingEvolutionDuringCycle("commander_kill", currentCycle.cycle_number);
+                }
                 if (data.length === 0) {
                     return undefined;
                 }
@@ -583,7 +596,11 @@ async function aooStats_init() {
 
                 let news = document.createElement("div");
                 let title = document.createElement("h3");
-                title.innerHTML = translator.translate("Top killers");
+                if (currentCycle.type === "void") {
+                    title.innerHTML = translator.translate("Top void killers");
+                } else {
+                    title.innerHTML = translator.translate("Top killers");
+                }
                 news.appendChild(title);
                 let list = document.createElement("ol");
                 list.style.paddingLeft = "0";
@@ -850,6 +867,8 @@ async function aooStats_init() {
                 "commander_island",
                 "commander_merit",
                 "commander_level",
+                "commander_reputation",
+                "commander_loss",
                 "commander_ke_frenzy",
                 "commander_sc_frenzy",
                 "commander_ke_void",
@@ -1198,6 +1217,8 @@ async function aooStats_init() {
                 "commander_warplane": scaler,
                 "commander_island": scaler,
                 "commander_merit": scaler,
+                "commander_reputation": scaler,
+                "commander_loss": scaler,
                 "commander_level": function(x, _){ return (x-50)/20;},
                 "commander_ke_frenzy": scaler,
                 "commander_sc_frenzy": scaler,
@@ -1240,7 +1261,11 @@ async function aooStats_init() {
                     if(ranks[i] === 101){
                         hovertext.push(translator.translate("No data"));
                     } else {
-                        hovertext.push(formatScore(scores[i]) + " (" + translator.translate("Rank: ") + ranks[i] + ")");
+                        if (ranks[i] === -1){
+                            hovertext.push(formatScore(scores[i]));
+                        }else{
+                            hovertext.push(formatScore(scores[i]) + " (" + translator.translate("Rank: ") + ranks[i] + ")");
+                        }
                     }
 
                 }
@@ -1289,7 +1314,7 @@ async function aooStats_init() {
                 let trace = {
                     type: "scatter",
                     //mode: "lines",
-                    name: (rank != 1000)?(entry["name"] + " (" + rank + ")"):entry["name"],
+                    name: (rank != 1000 && rank != -1)?(entry["name"] + " (" + rank + ")"):entry["name"],
                     x: (entryScore["dates"].length > 0)? entryScore["dates"] : [null],
                     y: (entryScore["scores"].length > 0)? entryScore["scores"] : [null],
                     line: {color: this.focusedEntries[entryId]}, //colorsArray[i % colorsArray.length]

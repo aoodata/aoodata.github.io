@@ -49,7 +49,7 @@ fr_dict={
     'Titan power': 'Puissance des titans',
     'City level upgrade': 'Mise à niveau de la ville',
     'Promotions': 'Promotions',
-    'Top killers': 'Les meilleurs tueurs',
+    'Top killers': 'Meilleurs tueurs',
     'Recruit': 'Recrue',
     'Private': 'Caporal',
     'Private First Class': 'Caporal Chef',
@@ -70,4 +70,7 @@ fr_dict={
     'No data': 'Pas de données',
     'Ranking: ': 'Rang',
     'commander_warplane': 'Avion',
+    'commander_reputation': 'Réputation',
+    'commander_loss': 'Perte',
+    'Top void killers': 'Meilleurs tueurs du vide',
 };
