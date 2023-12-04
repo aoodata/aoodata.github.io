@@ -1211,7 +1211,7 @@ async function aooStats_init() {
             let rankingScaling = {
                 "commander_power": scaler,
                 "commander_kill": scaler,
-                "commander_city": function(x, _){ return (x-30)/8;},
+                "commander_city": function(x, _){ return (x-30)/11;},
                 "commander_officer": scaler,
                 "commander_titan": scaler,
                 "commander_warplane": scaler,
