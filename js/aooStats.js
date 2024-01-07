@@ -75,11 +75,15 @@ async function aooStats_init() {
         }
 
         //get aliases
-        const req2 = db.exec("SELECT commander_id, name, date FROM commander_names")[0]["values"];
-        for (let i = 0; i < req2.length; i++) {
-            commanders[req2[i][0]]["aliases"] = commanders[req2[i][0]]["aliases"] || [];
-            commanders[req2[i][0]]["aliases"].push({"name": req2[i][1], "date": new Date(req2[i][2] * 1000)});
+        let req2 = db.exec("SELECT commander_id, name, date FROM commander_names")[0];
+        if (req2 !== undefined){
+            req2 = req2["values"];
+            for (let i = 0; i < req2.length; i++) {
+                commanders[req2[i][0]]["aliases"] = commanders[req2[i][0]]["aliases"] || [];
+                commanders[req2[i][0]]["aliases"].push({"name": req2[i][1], "date": new Date(req2[i][2] * 1000)});
+            }
         }
+
         return commanders;
     }
 
