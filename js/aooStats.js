@@ -580,7 +580,16 @@ async function aooStats_init() {
             newsDiv.style.marginTop = "-2.5em";
             mainDiv.appendChild(newsDiv);
 
+            let copyButton = document.createElement("div");
+            copyButton.innerText = "📋";
+            copyButton.style.textAlign = "center";
+            copyButton.style.cursor = "pointer";
+            mainDiv.appendChild(copyButton);
 
+            copyButton.onclick = function(){
+                let text = newsToPlainText();
+                navigator.clipboard.writeText(text);
+            }
 
             function getCommandersWithHighKillNumberDiv(numberOfCommanders=10){
                 var data;
@@ -777,6 +786,22 @@ async function aooStats_init() {
                     title.innerHTML = translator.translate("No data for this cycle");
                     newsDiv.appendChild(title);
                 }
+            }
+
+            function newsToPlainText(){
+                let text = "";
+                for(let i = 0; i < newsDiv.children.length; i++){
+                    let newsItem = newsDiv.children[i];
+                    let title = newsItem.getElementsByTagName("h3")[0];
+                    text += "[b]" + title.innerText + "[/b]\n";
+
+                    let listitems = newsItem.getElementsByTagName("li");
+                    for(let j = 0; j < listitems.length; j++){
+                        text += (j+1) + ". " + listitems[j].innerText + "\n";
+                    }
+                    text += "\n";
+                }
+                return text;
             }
 
             updateNews();
