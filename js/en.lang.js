@@ -45,6 +45,7 @@ en_dict = {
     "name : city_level": "{0} : {1}",
     "name reached xxx officer power": "{0} reached {1} power",
     "name reached xxx titan power": "{0} reached {1} power",
+    "name reached xxx warplane power": "{0} reached {1} power",
     "Officer power": "Officer power",
     "Titan power": "Titan power",
     "City level upgrade": "City level upgrade",

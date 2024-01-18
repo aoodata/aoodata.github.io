@@ -683,17 +683,25 @@ async function aooStats_init() {
             }
 
             function getCommandersWithRankingStepUpDiv(mode){
-                let stepSize, ranking_name, formatString, newstitle;
+                let stepSize, ranking_name, formatString, newstitle, minvalue;
                 if(mode === "officer"){
                     stepSize = 500000;
+                    minvalue = 0;
                     ranking_name = "commander_officer";
                     formatString = translator.translate("name reached xxx officer power");
                     newstitle = translator.translate("Officer power");
                 } else if(mode === "titan"){
                     stepSize = 100000;
+                    minvalue = 0;
                     ranking_name = "commander_titan";
                     formatString = translator.translate("name reached xxx titan power");
                     newstitle = translator.translate("Titan power");
+                } else if(mode === "warplane"){
+                    stepSize = 25000;
+                    minvalue = 450000;
+                    ranking_name = "commander_warplane";
+                    formatString = translator.translate("name reached xxx warplane power");
+                    newstitle = translator.translate("Warplane power");
                 }
                 let data = dbData.getCommanderRankingEvolutionDuringCycle(ranking_name, currentCycle.cycle_number, true);
                 if (data.length === 0) {
@@ -701,6 +709,9 @@ async function aooStats_init() {
                 }
                 let filteredData = [];
                 for(let i = 0; i < data.length; i++){
+                    if(data[i].new_score < minvalue){
+                        continue;
+                    }
                     let newStep = Math.floor(data[i].new_score / stepSize);
                     let oldStep = Math.floor(data[i].old_score / stepSize);
                     if(newStep > oldStep){
@@ -745,6 +756,11 @@ async function aooStats_init() {
                 let titanStepUpNews = getCommandersWithRankingStepUpDiv("titan");
                 if(titanStepUpNews !== undefined){
                     newsDiv.appendChild(titanStepUpNews);
+                }
+
+                let warplaneStepUpNews = getCommandersWithRankingStepUpDiv("warplane");
+                if(warplaneStepUpNews !== undefined){
+                    newsDiv.appendChild(warplaneStepUpNews);
                 }
 
                 let promotionNews = getCommandersWithMeritPromotionDiv();
