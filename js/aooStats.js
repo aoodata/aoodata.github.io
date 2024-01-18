@@ -164,14 +164,15 @@ async function aooStats_init() {
      * Get the list of commanders with the highest score for a given data collection type
      * @param dataCollectionType the data collection type
      * @param limit the number of commanders to return
+     * @param order the order ("ASC" or "DESC")
      * @returns {number[]} the list of commanders IDs
      */
-    dbData.getHighestRankedCommanders = function (dataCollectionType, limit) {
+    dbData.getHighestRankedCommanders = function (dataCollectionType, limit, order="DESC") {
         if (!(dataCollectionType in dbData["latestDataCollection"])) {
             return [];
         }
         const latestDataCollectionId = dbData["latestDataCollection"][dataCollectionType]["id"];
-        const req = db.exec("SELECT commander_id FROM commander_ranking_data WHERE data_collection_id = " + latestDataCollectionId + " ORDER BY value DESC LIMIT " + limit)[0]["values"];
+        const req = db.exec("SELECT commander_id FROM commander_ranking_data WHERE data_collection_id = " + latestDataCollectionId + " ORDER BY value " + order + " LIMIT " + limit)[0]["values"];
         let commanders = [];
         for (let i = 0; i < req.length; i++) {
             commanders.push(req[i][0]);
@@ -188,7 +189,7 @@ async function aooStats_init() {
      */
     dbData.getAllianceScores = function (allianceId, dataCollectionType, limit=1000) {
         let dataCollectionTypeId = dbData["dataCollectionTypes"][dataCollectionType];
-        let req = db.exec("SELECT value, date, rank FROM alliance_ranking_data, data_collections WHERE data_collections.id = alliance_ranking_data.data_collection_id AND alliance_ranking_data.alliance_id = " + allianceId + " AND type_id = " + dataCollectionTypeId + " ORDER BY date ASC LIMIT " + limit);
+        let req = db.exec("SELECT value, date, rank FROM alliance_ranking_data, data_collections WHERE data_collections.id = alliance_ranking_data.data_collection_id AND alliance_ranking_data.alliance_id = " + allianceId + " AND type_id = " + dataCollectionTypeId + " ORDER BY date DESC LIMIT " + limit);
         return processAllianceCommanderScores(req)
     }
 
@@ -196,14 +197,15 @@ async function aooStats_init() {
      * Get the list of alliances with the highest score for a given data collection type
      * @param dataCollectionType the data collection type
      * @param limit the number of alliances to return
+     * @param order the order ("ASC" or "DESC")
      * @returns {number[]} the list of alliances IDs
      */
-    dbData.getHighestRankedAlliances = function (dataCollectionType, limit) {
+    dbData.getHighestRankedAlliances = function (dataCollectionType, limit, order="DESC") {
         if (!(dataCollectionType in dbData["latestDataCollection"])) {
             return [];
         }
         const latestDataCollectionId = dbData["latestDataCollection"][dataCollectionType]["id"];
-        const req = db.exec("SELECT alliance_id FROM alliance_ranking_data WHERE data_collection_id = " + latestDataCollectionId + " ORDER BY value DESC LIMIT " + limit)[0]["values"];
+        const req = db.exec("SELECT alliance_id FROM alliance_ranking_data WHERE data_collection_id = " + latestDataCollectionId + " ORDER BY value " + order + " LIMIT " + limit)[0]["values"];
         let alliances = [];
         for (let i = 0; i < req.length; i++) {
             alliances.push(req[i][0]);
@@ -1230,6 +1232,9 @@ async function aooStats_init() {
                 "commander_sc_void": scaler,
             }
 
+            let ascendingRanking = new Set();
+            ascendingRanking.add("alliance_elite");
+
             this._createSingleTraceSpiderPlot = function (entryId, color) {
                 let getScore = undefined;
                 if(this.mode === "commanderProfile") {
@@ -1460,15 +1465,15 @@ async function aooStats_init() {
 
                  if (Object.keys(this.focusedEntries).length == 0 && defaultTrace) {
                     let top_entries;
-
+                    let order = (ascendingRanking.has(this.rankingName))? "ASC" : "DESC";
                     if (this.mode == "commander") {
-                        top_entries = this.aooStats.getHighestRankedCommanders(this.rankingName, 10);
+                        top_entries = this.aooStats.getHighestRankedCommanders(this.rankingName, 10, order);
                     } else if (this.mode == "alliance"){
-                        top_entries = this.aooStats.getHighestRankedAlliances(this.rankingName, 5);
+                        top_entries = this.aooStats.getHighestRankedAlliances(this.rankingName, 5, order);
                     } else if (this.mode == "commanderProfile"){
-                        top_entries = this.aooStats.getHighestRankedCommanders("commander_officer", 3);
+                        top_entries = this.aooStats.getHighestRankedCommanders("commander_officer", 3, order);
                     } else if (this.mode == "AllianceProfile"){
-                        top_entries = this.aooStats.getHighestRankedAlliances("alliance_power", 3);
+                        top_entries = this.aooStats.getHighestRankedAlliances("alliance_power", 3, order);
                     }
                     /*
                     if (defaultTraceGhost) {
