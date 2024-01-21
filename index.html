@@ -33,13 +33,20 @@
     <script src='dist/sql-wasm.js'></script>
 </head>
 <script>
-    function change_lang(lang){
+    function get_page_addr(){
         const page_addr = window.location.href;
         const path = page_addr.substring(0, page_addr.lastIndexOf('/') + 1);
         const end = page_addr.lastIndexOf('?') === -1 ? page_addr.length : page_addr.lastIndexOf('?');
         const page_name = page_addr.substring(page_addr.lastIndexOf('/') + 1, end);
-        const new_page_addr = path + page_name + '?lang=' + lang;
-        window.location.href = new_page_addr;
+        return path + page_name;
+    }
+
+    function change_lang(lang){
+        window.location.href = get_page_addr() + '?lang=' + lang;
+    }
+
+    function change_world(world){
+        window.location.href = get_page_addr() + '?world=' + world;
     }
 </script>
 <body>
@@ -50,44 +57,55 @@
 
             <div id="news_body" class="modal-content">
 
-                <!--<div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>-->
+            </div>
+        </div>
+    </div>
+    <div id="select_world_modal" class="modal" style="max-height: 99vh;">
+        <div class="modal-dialog modal-dialog-centered" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" style="--bs-modal-width: 400px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 id="select_world_title" class="modal-title" style="text-align: center;width: 100%">Select World</h5>
+                </div>
+                <div id="select_world_body" class="modal-body" style="text-align: center;">
+
+                    <button type="button" class="btn select_world_button" data-bs-dismiss="modal">385</button>
+                    <button type="button" class="btn select_world_button" data-bs-dismiss="modal">594</button>
+                    <!--<div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>-->
+                </div>
             </div>
         </div>
     </div>
     <div class="divider"></div>
-    <div id="loading-message" class="px-4 py-3 mx-auto text-center main-container" style="min-height: 90vh; position: relative;">
-        <!--<div class="spinner-border" role="status" style="position: absolute; top: 50%">
-            <span>Loading...</span>
-
-        </div>-->
+    <div id="loading-message" class="px-4 py-3 mx-auto text-center main-container" style="min-height: 90vh; position: relative; display: none">
         <div  role="status" style="position: absolute; top: 50%; left: 50%; transform: translateY(-50%) translateX(-50%);">
             <div class = "rotate"><img src="android-chrome-192x192.png" alt="Loading..." style="width: 100px; height: 100px;"></div>
-
-
         </div>
     </div>
     <div id="main_content" style="display: none">
         <div class="px-4 py-3 mx-auto text-center main-container" style="background-color: #203a3a;position: relative">
             <h1 id="main_title" class="display-5 fw-bold" style="margin-bottom: 0px;color: #ffffff;">AOO 385</h1>
             <span style="position: absolute;top: 0px;right: 0px;margin-right: 20px">
-            <img src="figs/gb.svg" alt="English" style="width: 20px; height: 20px; cursor: pointer;"
-                 onclick="change_lang('en')">
-            <img src="figs/fr.svg" alt="Français" style="width: 20px; height: 20px; cursor: pointer;"
-                 onclick="change_lang('fr')">
-            <img src="figs/jp.svg" alt="日本語" style="width: 20px; height: 20px; cursor: pointer;"
-                 onclick="change_lang('ja')">
-            <img src="figs/kr.svg" alt="한국어" style="width: 20px; height: 20px; cursor: pointer;"
-                 onclick="change_lang('ko')">
-            <img src="figs/es.svg" alt="Español" style="width: 20px; height: 20px; cursor: pointer;"
-                 onclick="change_lang('es')">
-            <img src="figs/pt.svg" alt="Português" style="width: 20px; height: 20px; cursor: pointer;"
-                 onclick="change_lang('pt')">
-            <img src="figs/ru.svg" alt="Русский" style="width: 20px; height: 20px; cursor: pointer;"
-                 onclick="change_lang('ru')">
-        </span>
-            <span id="news_button" style="position: absolute;top: 2px;left: 10px;cursor: pointer;">📰</span>
+                <img src="figs/gb.svg" alt="English" style="width: 20px; height: 20px; cursor: pointer;"
+                     onclick="change_lang('en')">
+                <img src="figs/fr.svg" alt="Français" style="width: 20px; height: 20px; cursor: pointer;"
+                     onclick="change_lang('fr')">
+                <img src="figs/jp.svg" alt="日本語" style="width: 20px; height: 20px; cursor: pointer;"
+                     onclick="change_lang('ja')">
+                <img src="figs/kr.svg" alt="한국어" style="width: 20px; height: 20px; cursor: pointer;"
+                     onclick="change_lang('ko')">
+                <img src="figs/es.svg" alt="Español" style="width: 20px; height: 20px; cursor: pointer;"
+                     onclick="change_lang('es')">
+                <img src="figs/pt.svg" alt="Português" style="width: 20px; height: 20px; cursor: pointer;"
+                     onclick="change_lang('pt')">
+                <img src="figs/ru.svg" alt="Русский" style="width: 20px; height: 20px; cursor: pointer;"
+                     onclick="change_lang('ru')">
+            </span>
+            <div style="position: absolute;top: 2px;left: 10px;">
+                <span id="change_world_button" onclick="change_world('')" style="cursor: pointer;" data-bs-toggle="tooltip" data-bs-html="true" title="Change world">🌍</span>
+                <span id="news_button" style="cursor: pointer;" data-bs-toggle="tooltip" data-bs-html="true" title="Show news">📰</span>
+            </div>
         </div>
         <div class="divider"></div>
         <div class="py-2 mx-auto text-center main-container">
@@ -144,7 +162,7 @@
                 storage.length !== 0;
         }
     }
-    world = 385;
+    world = undefined;
     // get navigator language
     if (navigator.languages != undefined) {
         lang = navigator.languages[0];
@@ -179,62 +197,88 @@
     }
 
 
-    newsModalLastSeen = 0;
-    if (localStorageAvailable) {
-        if (localStorage.getItem('newsModalLastSeen') != null) {
-            newsModalLastSeen = localStorage.getItem('newsModalLastSeen');
-        }
-    }
+
 
     document.getElementById("main_title").innerHTML = "AOO " + world;
     translator = new Translator(dicts, lang);
 
+    // enable tooltips everywhere
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
 
-
-    aooStats_init().then(function (aooStats) {
-
-        document.getElementById("main_content").style.display = "block";
-        document.getElementById("title_commander_box").innerHTML = translator.translate("Commander Ranking");
-        document.getElementById("title_alliance_box").innerHTML = translator.translate("Alliance Ranking");
-        document.getElementById("title_commader_profile_box").innerHTML = translator.translate("Commander Strength");
-        document.getElementById("title_strongestcommander_box").innerHTML = translator.translate("Strongest Commander");
-        let ranking = "commander_officer";
-
-        let commanderRankingWidget = new aooStats.rankingWidget("commander_graph_holder", "commander_officer", aooStats, aooStats["commanders"], mode = "commander");
-        let commanderProfileWidget = new aooStats.rankingWidget("commander_profile_graph_holder", "", aooStats, aooStats["commanders"], mode = "commanderProfile");
-        let allianceRankingWidget = new aooStats.rankingWidget("alliance_graph_holder", "alliance_power", aooStats, aooStats["alliances"], mode = "alliance");
-
-
-        let strongestCommanderDiv = document.getElementById("strongest_commander_list");
-        strongestCommanderDiv.style.paddingLeft = "20px";
-        strongestCommanderDiv.style.paddingRight = "20px";
-
-
-        strongestCommanderDiv.innerHTML =
-            '<span style="font-size: 150%;font-weight: bold;margin-right: 20px;vertical-align: middle">' + translator.translate("Strongest Commander Events") + ' </span>'
-
-
-        let strongestCommanderWidget = new aooStats.strongestCommanderEventWidget(strongestCommanderDiv);
-
-
-        let news_modal = new bootstrap.Modal(document.getElementById('news_modal'));
-        document.getElementById("news_button").addEventListener('click', function () {
-            news_modal.show();
+    if(world === undefined || world === ""){
+        document.getElementById("select_world_title").innerHTML = "🌍 " + translator.translate("Select World") + " 🌍";
+        let select_world_modal = new bootstrap.Modal(document.getElementById('select_world_modal'), {
+            keyboard: false,
+            backdrop: 'static',
         });
-        let newsWidget = new aooStats.newsWidget(document.getElementById("news_body"));
 
-
-        document.getElementById("loading-message").style.display = "none";
-
-        // show news modal if not seen yet
-        let currentDateTime = new Date();
-        if (newsModalLastSeen < currentDateTime.getTime() - 1000 * 60 * 60 * 24) {
-            news_modal.show();
-            if (localStorageAvailable) {
-                localStorage.setItem('newsModalLastSeen', currentDateTime.getTime());
+        document.getElementById("select_world_body").addEventListener('click', function (event) {
+            if(event.target.classList.contains('select_world_button')){
+                let world = event.target.innerHTML;
+                change_world(world)
             }
-        }
-    });
+        });
+        select_world_modal.show();
+    } else {
+        document.getElementById("loading-message").style.display = "block";
+        aooStats_init().then(function (aooStats) {
+
+            document.getElementById("main_content").style.display = "block";
+
+
+            document.getElementById("title_commander_box").innerHTML = translator.translate("Commander Ranking");
+            document.getElementById("title_alliance_box").innerHTML = translator.translate("Alliance Ranking");
+            document.getElementById("title_commader_profile_box").innerHTML = translator.translate("Commander Strength");
+            document.getElementById("title_strongestcommander_box").innerHTML = translator.translate("Strongest Commander");
+            let ranking = "commander_officer";
+
+            let commanderRankingWidget = new aooStats.rankingWidget("commander_graph_holder", "commander_officer", aooStats, aooStats["commanders"], mode = "commander");
+            let commanderProfileWidget = new aooStats.rankingWidget("commander_profile_graph_holder", "", aooStats, aooStats["commanders"], mode = "commanderProfile");
+            let allianceRankingWidget = new aooStats.rankingWidget("alliance_graph_holder", "alliance_power", aooStats, aooStats["alliances"], mode = "alliance");
+
+
+            let strongestCommanderDiv = document.getElementById("strongest_commander_list");
+            strongestCommanderDiv.style.paddingLeft = "20px";
+            strongestCommanderDiv.style.paddingRight = "20px";
+
+
+            strongestCommanderDiv.innerHTML =
+                '<span style="font-size: 150%;font-weight: bold;margin-right: 20px;vertical-align: middle">' + translator.translate("Strongest Commander Events") + ' </span>'
+
+
+            let strongestCommanderWidget = new aooStats.strongestCommanderEventWidget(strongestCommanderDiv);
+
+            newsModalLastSeen = 0;
+            if (localStorageAvailable) {
+                if (localStorage.getItem('newsModalLastSeen' + world) != null) {
+                    newsModalLastSeen = localStorage.getItem('newsModalLastSeen' + world);
+                }
+            }
+
+            let news_modal = new bootstrap.Modal(document.getElementById('news_modal'));
+            document.getElementById("news_button").addEventListener('click', function () {
+                news_modal.show();
+            });
+            let newsWidget = new aooStats.newsWidget(document.getElementById("news_body"));
+
+
+            document.getElementById("loading-message").style.display = "none";
+
+            // show news modal if not seen yet
+            let currentDateTime = new Date();
+            if (newsModalLastSeen < currentDateTime.getTime() - 1000 * 60 * 60 * 24) {
+                news_modal.show();
+                if (localStorageAvailable) {
+                    localStorage.setItem('newsModalLastSeen' + world, currentDateTime.getTime());
+                }
+            }
+        });
+    }
+
+
 
 </script>
 

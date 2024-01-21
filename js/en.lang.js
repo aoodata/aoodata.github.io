@@ -74,4 +74,5 @@ en_dict = {
     "commander_reputation": "Reputation",
     "commander_loss": "Loss",
     "Top void killers": "Top void killers",
+    "Select World": "Select World",
 }

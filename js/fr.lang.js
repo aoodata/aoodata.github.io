@@ -74,4 +74,5 @@ fr_dict={
     'commander_reputation': 'Réputation',
     'commander_loss': 'Perte',
     'Top void killers': 'Meilleurs tueurs du vide',
+    'Select World': 'Sélectionnez votre nation',
 };

@@ -73,4 +73,5 @@ es_dict={    'commander_power': 'Fuerza',
     'commander_reputation': 'Reputación',
     'commander_loss': 'Pérdida',
     'Top void killers': 'Asesinos vacíos superiores',
+    'Select World': 'Seleccione su nación',
 };

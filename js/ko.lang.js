@@ -73,4 +73,5 @@ ko_dict={    'commander_power': '힘',
     'commander_reputation': '평판',
     'commander_loss': '손실',
     'Top void killers': '최고 공허 살인자',
+    'Select World': '당신의 국가를 선택하십시오',
 };
