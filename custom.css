@@ -176,3 +176,13 @@ input[type=submit] {
     margin-right: 5px;
 
 }
+
+.form-check-input:checked {
+    background-color: #198754;
+    border-color: #1f3030;
+}
+
+.form-check-input:focus {
+    border-color: #1f3030;
+    box-shadow: 0 0 0 0.25rem rgba(96, 159, 105, .25);
+}

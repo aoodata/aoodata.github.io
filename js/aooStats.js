@@ -877,7 +877,12 @@ async function aooStats_init() {
             this.focusedEntries = {}
             // set of colors used in the chart (used to avoid using the same color twice)
             this.usedColors = new Set();
+            // display ranks or scores
+            this.displayMode = "scores";
 
+            this.isDisplayRanks = function(){
+                return !rankings_without_ranks.has(this.rankingName) && this.displayMode === "ranks";
+            }
 
             let colorsArray = [
                 "#0bb4ff",
@@ -939,6 +944,8 @@ async function aooStats_init() {
                 "allianceProfile": alliance_rankings
             }
 
+            let rankings_without_ranks = new Set(["commander_reputation", "commander_loss"]);
+
             /***********************************
              * Create graph control row
              ***********************************/
@@ -983,8 +990,33 @@ async function aooStats_init() {
                         }
                         dropdownItems[i].classList.add("active");
                         rankingNameButton.innerHTML = dropdownItems[i].innerHTML;
+                        if (rankings_without_ranks.has(dropdownItems[i].dataset.name)) {
+                            // disable rankswitch
+                            this.switchInput.disabled = true;
+                        } else {
+                            this.switchInput.disabled = false;
+                        }
                     }.bind(this));
                 }
+            }
+
+             // ------------------- Score/Rank switch -------------------
+            if (this.mode !== "commanderProfile" && this.mode !== "allianceProfile") {
+                let switchDIV = document.createElement("div");
+                switchDIV.style.display = "inline-block";
+                switchDIV.style.paddingLeft = "20px";
+                switchDIV.innerHTML =
+                    '<span  style="font-size: 120%;font-weight: bold; vertical-align: middle;">' + translator.translate("Ranks:") + '</span>' +
+                    '<div class="form-check form-switch" style="vertical-align: middle; display: inline-block; padding-left: 50px;">' +
+                    '<input class="form-check-input" type="checkbox" role="switch">' +
+                    '</div>';
+                graphCommandsRow.appendChild(switchDIV);
+
+                this.switchInput = switchDIV.getElementsByTagName("input")[0];
+                this.switchInput.addEventListener("change", function () {
+                    this.displayMode = this.switchInput.checked ? "ranks" : "scores";
+                    this.updateGraph();
+                }.bind(this));
             }
 
 
@@ -1177,6 +1209,9 @@ async function aooStats_init() {
 
             initAutoComplete(this);
 
+
+
+
             // ------------------ Graph control buttons ------------------
             let controlButtons = document.createElement("div");
             controlButtons.style.verticalAlign = "middle";
@@ -1363,20 +1398,43 @@ async function aooStats_init() {
                 color = color || this.getFreeColor();
                 this.usedColors.add(color);
                 this.focusedEntries[entryId] = color;
-                let rank = (entryScore["ranks"].length > 0)? entryScore["ranks"][0]:1000;
-                let trace = {
-                    type: "scatter",
-                    //mode: "lines",
-                    name: (rank != 1000 && rank != -1)?(entry["name"] + " (" + rank + ")"):entry["name"],
-                    x: (entryScore["dates"].length > 0)? entryScore["dates"] : [null],
-                    y: (entryScore["scores"].length > 0)? entryScore["scores"] : [null],
-                    line: {color: this.focusedEntries[entryId]}, //colorsArray[i % colorsArray.length]
-                    opacity: 1,
-                    entry_id: entryId,
-                    legendrank: rank,
-                    showlegend: true
+                if (!this.isDisplayRanks()){
+                    let rank = (entryScore["ranks"].length > 0)? entryScore["ranks"][0]:1000;
+                    let trace = {
+                        type: "scatter",
+                        //mode: "lines",
+                        name: (rank != 1000 && rank != -1)?(entry["name"] + " (" + rank + ")"):entry["name"],
+                        x: (entryScore["dates"].length > 0)? entryScore["dates"] : [null],
+                        y: (entryScore["scores"].length > 0)? entryScore["scores"] : [null],
+                        line: {color: this.focusedEntries[entryId]}, //colorsArray[i % colorsArray.length]
+                        opacity: 1,
+                        entry_id: entryId,
+                        legendrank: rank,
+                        showlegend: true
+                    }
+                    return trace;
+                } else {
+                    let rank = (entryScore["ranks"].length > 0)? entryScore["ranks"][0]:1000;
+                    // if ranking is missing, set it to 101
+                    for (let i = 0; i < entryScore["ranks"].length; i++) {
+                        if (entryScore["ranks"][i] === -1){
+                            entryScore["ranks"][i] = 101;
+                        }
+                    }
+                    let trace = {
+                        type: "scatter",
+                        //mode: "lines",
+                        name: entry["name"],
+                        x: (entryScore["dates"].length > 0)? entryScore["dates"] : [null],
+                        y: (entryScore["ranks"].length > 0)? entryScore["ranks"] : [null],
+                        line: {color: this.focusedEntries[entryId]}, //colorsArray[i % colorsArray.length]
+                        opacity: 1,
+                        entry_id: entryId,
+                        legendrank: rank,
+                        showlegend: true
+                    }
+                    return trace;
                 }
-                return trace;
             }
 
 
@@ -1507,58 +1565,20 @@ async function aooStats_init() {
                     Plotly.addTraces(this.chartDIV, [trace]);
                 }
 
-                 if (Object.keys(this.focusedEntries).length == 0 && defaultTrace) {
+                 if (Object.keys(this.focusedEntries).length === 0 && defaultTrace) {
                     let top_entries;
                     let order = (ascendingRanking.has(this.rankingName))? "ASC" : "DESC";
-                    if (this.mode == "commander") {
+                    if (this.mode === "commander") {
                         top_entries = this.aooStats.getHighestRankedCommanders(this.rankingName, 10, order);
-                    } else if (this.mode == "alliance"){
+                    } else if (this.mode === "alliance"){
                         top_entries = this.aooStats.getHighestRankedAlliances(this.rankingName, 5, order);
-                    } else if (this.mode == "commanderProfile"){
+                    } else if (this.mode === "commanderProfile"){
                         top_entries = this.aooStats.getHighestRankedCommanders("commander_officer", 3, order);
-                    } else if (this.mode == "AllianceProfile"){
+                    } else if (this.mode === "AllianceProfile"){
                         top_entries = this.aooStats.getHighestRankedAlliances("alliance_power", 3, order);
                     }
-                    /*
-                    if (defaultTraceGhost) {
-                        let traces = [];
-                        for (let i = 0, j = 0; i < top_entries.length; i++, j++) {
-                            let entry;
-                            let entry_scores;
-                            if (this.mode == "commander") {
-                                entry = this.aooStats["commanders"][top_entries[i]];
-                                entry_scores = this.aooStats.getCommanderScores(top_entries[i], this.rankingName);
-                            } else {
-                                entry = this.aooStats["alliances"][top_entries[i]];
-                                entry_scores = this.aooStats.getAllianceScores(top_entries[i], this.rankingName);
-                            }
-
-                            let trace = {
-                                type: "scatter",
-                                //mode: "lines",
-                                name: entry.name,
-                                x: entry_scores["dates"],
-                                y: entry_scores["scores"],
-                                line: {color: "#74bbbb"}, //colorsArray[i % colorsArray.length]
-                                opacity: 0.2,
-                                //hide from legend
-                                showlegend: false,
-                                entry_id: top_entries[i],
-                            }
-
-
-                            traces.push(trace);
-                            if (i > 10)
-                                i += 3;
-                            if (i > 50)
-                                i += 5;
-                        }
-
-                        //Plotly.update(this.chartDIV, {}, {title: rankingName});
-                        Plotly.addTraces(this.chartDIV, traces);
-                    } else {*/
                     this.addTrace(top_entries);
-                    //}
+
                 } else {
                     let keys = [];
                     let colors = [];
@@ -1569,11 +1589,23 @@ async function aooStats_init() {
                     this.addTrace(keys, colors);
                 }
 
-                if (this.mode == "commander" || this.mode == "alliance") {
-                    Plotly.relayout(this.chartDIV, {
-                        'xaxis.autorange': true,
-                        'yaxis.autorange': true
-                    });
+                if (this.mode === "commander" || this.mode === "alliance") {
+                    if (this.isDisplayRanks()) {
+                        Plotly.relayout(this.chartDIV, {
+                            'xaxis.autorange': true,
+                            'yaxis.autorange': "reversed",
+                        });
+                    }else {
+                        // first relayout forces to have yaxis is increasing order
+                        Plotly.relayout(this.chartDIV, {
+                            'xaxis.autorange': true,
+                            'yaxis.range': [0,1],
+                        });
+                        Plotly.relayout(this.chartDIV, {
+                            'xaxis.autorange': true,
+                            'yaxis.autorange': true,
+                        });
+                    }
                 } else{
                     Plotly.relayout(this.chartDIV, {
                         'polar.radialaxis.range': [0,1],
