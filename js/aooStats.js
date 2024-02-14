@@ -728,6 +728,9 @@ async function aooStats_init() {
                         filteredData.push(data[i]);
                     }
                 }
+                if (filteredData.length === 0) {
+                    return undefined;
+                }
                 filteredData.sort(function(a, b){
                     return b.new_score - a.new_score;
                 }  );
