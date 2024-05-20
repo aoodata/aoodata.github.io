@@ -666,7 +666,7 @@ async function aooStats_init() {
                 return news;
             }
 
-            function getCommandersWithCityLevelUpgradeDiv(numberOfCommanders=10){
+            function getCommandersWithCityLevelUpgradeDiv(numberOfCommanders=20){
                 let data = dbData.getCommanderRankingEvolutionDuringCycle("commander_city", currentCycle.cycle_number, true);
                 if (data.length === 0) {
                     return undefined;
